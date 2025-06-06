@@ -1,0 +1,9 @@
+{
+  "domain": "poer",
+  "name": "Poer",
+  "version": "1.0.0",
+  "documentation": "https://github.com/poersmart/poer-home-assistant",
+  "requirements": [],
+  "codeowners": [],
+  "config_flow": true
+}
