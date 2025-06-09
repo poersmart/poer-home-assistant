@@ -1,51 +1,58 @@
 """Support for Poer WiFi Thermostats."""
 
-from __future__ import annotations
-
-from asyncio import timeout
-from http import HTTPStatus
-from typing import Any
-
-from aiohttp import ClientSession
-
-# from airly import Airly
-# from airly.exceptions import AirlyError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant import config_entries
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, ISMOCK
 
 
-class PoerFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Config flow for Poer."""
+class POERConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for POER Thermostat."""
 
-    VERSION = 1
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
+    async def async_step_user(self, user_input=None):
+        """Handle the initial step."""
         errors = {}
-
-        websession = async_get_clientsession(self.hass)
-        username = "testuser"
-        token = "testapikey"
         if user_input is not None:
-            return self.async_create_entry(
-                title=username,
-                data={"token": token, "username": username},
-            )
+            api_token = user_input.get("api_key")
+            valid = True
+            api_url = ""
+
+            if api_token.startswith("cn"):
+                api_url = "https://open2.poersmart.com"
+            elif api_token.startswith("eu"):
+                api_url = "https://open.poersmart.com"
+            else:
+                valid = False
+            api_token = api_token[2:]
+            if not ISMOCK:
+                valid = await self._test_credentials(api_url, api_token)
+            if valid:
+                return self.async_create_entry(
+                    title="POER Thermostat",
+                    data={"api_token": api_token, "api_url": api_url},
+                )
+            errors["base"] = "invalid api key"
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    vol.Required("api_key"): str,
                 }
             ),
             errors=errors,
         )
+
+    async def _test_credentials(self, api_url: str, api_token: str) -> bool:
+        """Test if the credentials are valid."""
+        session = async_create_clientsession(self.hass)
+        headers = {"token": api_token}
+
+        try:
+            url = f"{api_url.rstrip('/')}/api/v1/ping"
+            async with session.get(url, headers=headers) as resp:
+                return resp.status == 200
+        except Exception:
+            return False

@@ -1,4 +1,4 @@
-"""The Poer integration."""
+"""The POER Thermostat integration."""
 
 from __future__ import annotations
 
@@ -9,16 +9,11 @@ from homeassistant.core import HomeAssistant
 PLATFORMS = [Platform.CLIMATE]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the component (legacy)."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up from a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    )
+    """Set up POER Thermostat from a config entry."""
+
+    # 设置平台
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
