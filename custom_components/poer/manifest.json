@@ -3,6 +3,7 @@
   "name": "Poer",
   "version": "1.0.0",
   "documentation": "https://github.com/poersmart/poer-home-assistant",
+  "issue_tracker": "https://github.com/poersmart/poer-home-assistant/issues",
   "requirements": [],
   "codeowners": [],
   "config_flow": true,
