@@ -177,7 +177,7 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
             manufacturer=self._attr_manufacturer,
             model=self._attr_model,
             sw_version=self._attr_firmware_version,
-            via_device=(DOMAIN, "cloud_bridge"),
+            # via_device=(DOMAIN, "cloud_bridge"),
         )
 
     async def async_set_temperature(self, **kwargs) -> None:
