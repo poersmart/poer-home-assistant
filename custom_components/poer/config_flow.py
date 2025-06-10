@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DOMAIN, ISMOCK
+from .const import DOMAIN, ISMOCK, CNURL, EUURL
 
 
 class POERConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -20,14 +20,14 @@ class POERConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_url = ""
 
             if api_token.startswith("cn"):
-                api_url = "https://open2.poersmart.com"
+                api_url = CNURL
             elif api_token.startswith("eu"):
-                api_url = "https://open.poersmart.com"
+                api_url = EUURL
             else:
                 valid = False
             api_token = api_token[2:]
-            if not ISMOCK:
-                valid = await self._test_credentials(api_url, api_token)
+            # if not ISMOCK:
+            #     valid = await self._test_credentials(api_url, api_token)
             if valid:
                 return self.async_create_entry(
                     title="POER Thermostat",

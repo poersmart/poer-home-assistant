@@ -79,11 +79,11 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
         HVACMode.OFF,
     ]
     _attr_preset_modes = [
-        PRESET_NONE,
-        # PRESET_HOME,
+        # PRESET_NONE,
+        PRESET_HOME,
         PRESET_AWAY,
         # PRESET_SLEEP,
-        PRESET_ECO,
+        # PRESET_ECO,
     ]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -125,8 +125,10 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
         self._attr_current_temperature = data.get("current_temp")
         self._attr_current_humidity = data.get("current_humidity")
         self._attr_target_temperature = data.get("target_temp")
-        self._attr_target_temperature_low = data.get("temp_low")
-        self._attr_target_temperature_high = data.get("temp_high")
+        self._attr_min_temp = data.get("min_temp")
+        self._attr_max_temp = data.get("max_temp")
+        # self._attr_target_temperature_low = data.get("temp_low")
+        # self._attr_target_temperature_high = data.get("temp_high")
 
         # 设备信息
         self._attr_model = data.get("model", "Unknown Model")
@@ -135,8 +137,14 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
 
         # 状态映射
         self._attr_hvac_mode = self._map_hvac_mode(data.get("mode"))
-        self._attr_hvac_action = self._map_hvac_action(data.get("action"))
         self._attr_preset_mode = self._map_preset_mode(data.get("preset"))
+        self._attr_hvac_action = self._map_hvac_action(data.get("action"))
+        # mode = data.get("mode")
+        # if mode is not None:
+        #     self._attr_hvac_mode = self._map_hvac_mode(mode)
+        # preset = data.get("preset")
+        # if preset is not None:
+        #     self._attr_preset_mode = self._map_preset_mode(preset)
 
     def _map_hvac_mode(self, mode: str) -> HVACMode:
         """Map HVAC mode from device value."""
@@ -151,7 +159,7 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
     def _map_hvac_action(self, action: str) -> HVACAction:
         """Map HVAC action from device value."""
         action_map = {
-            "cooling": HVACAction.COOLING,
+            # "cooling": HVACAction.COOLING,
             "heating": HVACAction.HEATING,
             "idle": HVACAction.IDLE,
         }
@@ -160,13 +168,13 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
     def _map_preset_mode(self, preset: str) -> str:
         """Map preset mode from device value."""
         preset_map = {
-            # "home": PRESET_HOME,
+            "home": PRESET_HOME,
             "away": PRESET_AWAY,
             # "sleep": PRESET_SLEEP,
-            "eco": PRESET_ECO,
-            "none": PRESET_NONE,
+            # "eco": PRESET_ECO,
+            # "none": PRESET_NONE,
         }
-        return preset_map.get(preset, PRESET_NONE)
+        return preset_map.get(preset, PRESET_HOME)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -183,8 +191,8 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs) -> None:
         """Set target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
-        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        # target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        # target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
         # 准备API请求数据
         endpoint, payload = None, None
@@ -193,11 +201,11 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
             endpoint = "set_temp"
             payload = {"temperature": temp}
             self._attr_target_temperature = temp  # 乐观更新
-        elif target_temp_low is not None and target_temp_high is not None:
-            endpoint = "set_temp_range"
-            payload = {"low": target_temp_low, "high": target_temp_high}
-            self._attr_target_temperature_low = target_temp_low  # 乐观更新
-            self._attr_target_temperature_high = target_temp_high  # 乐观更新
+        # elif target_temp_low is not None and target_temp_high is not None:
+        #     endpoint = "set_temp_range"
+        #     payload = {"low": target_temp_low, "high": target_temp_high}
+        #     self._attr_target_temperature_low = target_temp_low  # 乐观更新
+        #     self._attr_target_temperature_high = target_temp_high  # 乐观更新
 
         if endpoint and payload:
             success = await self.coordinator.send_command(
@@ -242,8 +250,8 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
             PRESET_HOME: "home",
             PRESET_AWAY: "away",
             # PRESET_SLEEP: "sleep",
-            PRESET_ECO: "eco",
-            PRESET_NONE: "none",
+            # PRESET_ECO: "eco",
+            # PRESET_NONE: "none",
         }
 
         if (device_preset := preset_map.get(preset_mode)) is None:

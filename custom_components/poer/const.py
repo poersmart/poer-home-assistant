@@ -6,7 +6,9 @@ import logging
 from typing import Final
 
 DOMAIN: Final = "poer"
-ISMOCK: Final = True
+ISMOCK: Final = False
+CNURL: Final = "http://10.11.0.150:6666"
+EUURL: Final = "http://10.11.0.150:6666"
 
 
 _LOGGER = logging.getLogger(__name__)

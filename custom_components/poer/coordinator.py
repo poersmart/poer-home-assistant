@@ -31,62 +31,51 @@ class DeviceCoordinator(DataUpdateCoordinator):
         self.api_token = api_token
         self.session = async_get_clientsession(hass)
         self.headers = {
-            "token": self.api_token,
+            "Authorization": "beer " + self.api_token,
             "Content-Type": "application/json",
         }
 
     async def _async_update_data(self) -> list[dict]:
         """Fetch device data from cloud."""
-        if ISMOCK:
-            _LOGGER.info("Mock update_data")
-            return [
-                {
-                    "device_id": "thermo-001",
-                    "name": "Living Room",
-                    "model": "POER Pro",
-                    "firmware": "1.2.3",
-                    "current_temp": 22.5,
-                    "current_humidity": 45,
-                    "target_temp": 23.0,
-                    "mode": "auto",
-                    "action": "idle",
-                    "preset": "home",
-                },
-                {
-                    "device_id": "thermo-002",
-                    "name": "Bedroom",
-                    "model": "POER Lite",
-                    "firmware": "1.1.2",
-                    "current_temp": 20.8,
-                    "current_humidity": 50,
-                    "target_temp": 21.0,
-                    "mode": "auto",
-                    "action": "idle",
-                    "preset": "home",
-                },
-            ]
 
         try:
             # 获取设备列表
-            devices_url = f"{self.api_url}/api/v1/devices"
-            async with self.session.get(devices_url, headers=self.headers) as response:
+            devices_url = f"{self.api_url}/speaker/ha"
+            payload = {
+                "requestId": "111",
+                "inputs": [{"intent": "action.devices.SYNC"}],
+            }
+            async with self.session.post(
+                devices_url, json=payload, headers=self.headers
+            ) as response:
                 if response.status != 200:
                     response_text = await response.text()
                     _LOGGER.error(
                         "API request failed: %d %s", response.status, response_text
                     )
-                    raise Exception(f"API error {response.status}")
+                    return False
+                    # raise Exception(f"API error {response.status}")
 
-                devices = await response.json()
-
+                rspJson = await response.json()
+                devices = rspJson["payload"]["devices"]
             # 获取每个设备的详细状态
             detailed_devices = []
             for device in devices:
-                device_id = device["device_id"]
-                status_url = f"{self.api_url}/api/v1/devices/{device_id}/status"
+                device_id = device["id"]
+                payload = {
+                    "requestId": "111",
+                    "inputs": [
+                        {
+                            "intent": "action.devices.QUERY",
+                            "payload": {"devices": [{"id": device_id}]},
+                        }
+                    ],
+                }
+                status_data = {}
+                status_url = f"{self.api_url}/speaker/ha"
                 try:
-                    async with self.session.get(
-                        status_url, headers=self.headers
+                    async with self.session.post(
+                        status_url, json=payload, headers=self.headers
                     ) as response:
                         if response.status != 200:
                             _LOGGER.warning(
@@ -94,14 +83,49 @@ class DeviceCoordinator(DataUpdateCoordinator):
                                 device_id,
                                 response.status,
                             )
-                            status_data = {}
                         else:
                             status_data = await response.json()
                 except aiohttp.ClientError as e:
                     _LOGGER.warning("Network error for device %s: %s", device_id, e)
-                    status_data = {}
 
-                device_info = {**device, **status_data}
+                poerMode = status_data["payload"]["devices"][device_id][
+                    "thermostatMode"
+                ]
+                device_info = {
+                    "device_id": device["id"],
+                    "name": device["name"]["name"],
+                    "model": device["deviceInfo"]["model"],
+                    "firmware": device["deviceInfo"]["swVersion"],
+                    "current_temp": status_data["payload"]["devices"][device_id][
+                        "thermostatTemperatureAmbient"
+                    ],
+                    "current_humidity": status_data["payload"]["devices"][device_id][
+                        "thermostatHumidityAmbient"
+                    ],
+                    "target_temp": status_data["payload"]["devices"][device_id][
+                        "thermostatTemperatureSetpoint"
+                    ],
+                    "action": status_data["payload"]["devices"][device_id][
+                        "thermostatAction"
+                    ],
+                    "min_temp": device["attributes"]["thermostatTemperatureRange"][
+                        "minThresholdCelsius"
+                    ],
+                    "max_temp": device["attributes"]["thermostatTemperatureRange"][
+                        "maxThresholdCelsius"
+                    ],
+                }
+                poerMode = status_data["payload"]["devices"][device_id][
+                    "thermostatMode"
+                ]
+                # poer: mode(preset): auto(home) heat/man(home) off(off) eco(away)
+                # ha: mode(preset): auto(home) heat/man(home) off(home) (away)
+                if poerMode in ("auto", "heat", "off"):
+                    device_info["preset"] = "home"
+                    device_info["mode"] = poerMode
+                elif poerMode == "eco":
+                    device_info["preset"] = "away"
+                    device_info["mode"] = "heat"
                 detailed_devices.append(device_info)
 
             return detailed_devices
@@ -113,13 +137,51 @@ class DeviceCoordinator(DataUpdateCoordinator):
             _LOGGER.error("Unexpected error during update: %s", e)
             raise
 
-    async def send_command(self, device_id: str, endpoint: str, payload: dict) -> bool:
+    async def send_command(self, device_id: str, endpoint: str, data: dict) -> bool:
         """Send command to device via API."""
-        url = f"{self.api_url}/api/v1/devices/{device_id}/{endpoint}"
+        payload = {
+            "requestId": "112",
+            "inputs": [
+                {
+                    "intent": "action.devices.EXECUTE",
+                    "payload": {
+                        "commands": [
+                            {
+                                "devices": [{"id": device_id}],
+                                "execution": [{}],
+                            }
+                        ]
+                    },
+                }
+            ],
+        }
+        if endpoint == "set_temp":
+            execution = [
+                {
+                    "command": "action.devices.commands.ThermostatTemperatureSetpoint",
+                    "params": {"thermostatTemperatureSetpoint": data["temperature"]},
+                }
+            ]
+        elif endpoint == "set_mode":
+            execution = [
+                {
+                    "command": "action.devices.commands.ThermostatSetMode",
+                    "params": {"thermostatMode": data["mode"]},
+                }
+            ]
+        elif endpoint == "set_preset":
+            if data["preset"] == "away":
+                execution = [
+                    {
+                        "command": "action.devices.commands.ThermostatSetMode",
+                        "params": {"thermostatMode": "eco"},
+                    }
+                ]
+            else:
+                return True
+        payload["inputs"][0]["payload"]["commands"][0]["execution"] = execution
 
-        if ISMOCK:
-            _LOGGER.info("Mock send_command: %s %s", url, payload)
-            return True
+        url = f"{self.api_url}/speaker/ha"
 
         try:
             async with self.session.post(
