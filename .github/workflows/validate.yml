@@ -1,0 +1,27 @@
+# File: .github/workflows/validate.yml
+name: Validate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  hacs-validation:
+    runs-on: ubuntu-latest
+    name: HACS Validation
+    steps:
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: integration
+
+  hassfest-validation:
+    runs-on: ubuntu-latest
+    name: Home Assistant Validation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Hassfest validation
+        uses: home-assistant/actions/hassfest@master
