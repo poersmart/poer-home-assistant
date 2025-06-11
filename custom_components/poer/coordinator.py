@@ -163,22 +163,16 @@ class DeviceCoordinator(DataUpdateCoordinator):
                 }
             ]
         elif endpoint == "set_mode":
+            mode = data["mode"]
+            preset = data["preset"]
+            if preset == "away":
+                mode = "eco"
             execution = [
                 {
                     "command": "action.devices.commands.ThermostatSetMode",
-                    "params": {"thermostatMode": data["mode"]},
+                    "params": {"thermostatMode": mode},
                 }
             ]
-        elif endpoint == "set_preset":
-            if data["preset"] == "away":
-                execution = [
-                    {
-                        "command": "action.devices.commands.ThermostatSetMode",
-                        "params": {"thermostatMode": "eco"},
-                    }
-                ]
-            else:
-                return True
         payload["inputs"][0]["payload"]["commands"][0]["execution"] = execution
 
         url = f"{self.api_url}/speaker/ha"

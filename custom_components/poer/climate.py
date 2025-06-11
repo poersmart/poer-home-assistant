@@ -237,7 +237,9 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
 
         # 发送命令
         success = await self.coordinator.send_command(
-            self.device_id, "set_mode", {"mode": device_mode}
+            self.device_id,
+            "set_mode",
+            {"mode": device_mode, "preset": self._attr_preset_mode},
         )
 
         if not success:
@@ -264,7 +266,9 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
 
         # 发送命令
         success = await self.coordinator.send_command(
-            self.device_id, "set_preset", {"preset": device_preset}
+            self.device_id,
+            "set_mode",
+            {"mode": self._attr_hvac_mode, "preset": device_preset},
         )
 
         if not success:
