@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DOMAIN, ISMOCK, CNURL, EUURL
+from .const import DOMAIN, CNURL, EUURL
 
 
 class POERConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -25,9 +25,9 @@ class POERConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api_url = EUURL
             else:
                 valid = False
-            api_token = api_token[2:]
-            # if not ISMOCK:
-            #     valid = await self._test_credentials(api_url, api_token)
+            if valid:
+                api_token = api_token[2:]
+                valid = await self._test_credentials(api_url, api_token)
             if valid:
                 return self.async_create_entry(
                     title="POER Thermostat",
@@ -48,10 +48,10 @@ class POERConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_credentials(self, api_url: str, api_token: str) -> bool:
         """Test if the credentials are valid."""
         session = async_create_clientsession(self.hass)
-        headers = {"token": api_token}
+        headers = {"Authorization": "beer " + api_token}
 
         try:
-            url = f"{api_url.rstrip('/')}/api/v1/ping"
+            url = f"{api_url.rstrip('/')}/speaker/ha/v1.0/ping"
             async with session.get(url, headers=headers) as resp:
                 return resp.status == 200
         except Exception:

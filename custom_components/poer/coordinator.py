@@ -13,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
-from .const import DOMAIN, ISMOCK, _LOGGER
+from .const import _LOGGER
 
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -40,7 +40,7 @@ class DeviceCoordinator(DataUpdateCoordinator):
 
         try:
             # 获取设备列表
-            devices_url = f"{self.api_url}/speaker/ha"
+            devices_url = f"{self.api_url}/speaker/ha/v1.0"
             payload = {
                 "requestId": "111",
                 "inputs": [{"intent": "action.devices.SYNC"}],
@@ -72,7 +72,7 @@ class DeviceCoordinator(DataUpdateCoordinator):
                     ],
                 }
                 status_data = {}
-                status_url = f"{self.api_url}/speaker/ha"
+                status_url = f"{self.api_url}/speaker/ha/v1.0"
                 try:
                     async with self.session.post(
                         status_url, json=payload, headers=self.headers
@@ -175,7 +175,7 @@ class DeviceCoordinator(DataUpdateCoordinator):
             ]
         payload["inputs"][0]["payload"]["commands"][0]["execution"] = execution
 
-        url = f"{self.api_url}/speaker/ha"
+        url = f"{self.api_url}/speaker/ha/v1.0"
 
         try:
             async with self.session.post(
