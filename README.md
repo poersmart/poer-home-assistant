@@ -24,10 +24,12 @@ You need to have the POER App configured and working in Home Assistant in order 
 
 ### Manual installation
 
+```bash
 cd config
 git clone https://github.com/poersmart/poer-home-assistant.git
 cd poer-home-assistant
 ./install.sh /config
+```
 
 ### HACS
 
