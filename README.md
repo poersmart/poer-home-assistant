@@ -24,18 +24,28 @@ You need to have the POER App configured and working in Home Assistant in order 
 
 ### Manual installation
 
-```bash
-cd config
-git clone https://github.com/poersmart/poer-home-assistant.git
-cd poer-home-assistant
-./install.sh /config
-```
+Clone this repository into `config/` Home Assistant folder.
 
 ### HACS
 
 This integration is now available from within HACS.
 
 Search for "poer" and click install.  You will also get notified of future upgrades.
+
+### API Key
+
+The api key is generated on the app. The app needs to be upgraded to at least version 3.2.26.
+
+Use the following steps to generate:
+
+- Go to the user information page, then find Home Assistant and click the Generate button.
+<img src="./doc/images/apikey_generate.jpg" width=30%>
+
+- Click the Copy button to copy it for use.
+<img src="./doc/images/apikey_copy.jpg" width=30%>
+
+- If you no longer want to use Home Assistant related functions, please click the Release button.
+
 
 ### Config
 
