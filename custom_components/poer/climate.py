@@ -33,7 +33,7 @@ from .coordinator import DeviceCoordinator
 DEFAULT_NAME = "POER Thermostat"
 DEFAULT_MIN_TEMP = 5.0
 DEFAULT_MAX_TEMP = 35.0
-DEFAULT_TEMP_STEP = 0.5
+DEFAULT_TEMP_STEP = 0.1
 
 
 async def async_setup_entry(
