@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -70,7 +70,7 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
     _attr_min_temp = DEFAULT_MIN_TEMP
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_target_temperature_step = DEFAULT_TEMP_STEP
-    _attr_precision = PRECISION_HALVES
+    _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [
         HVACMode.AUTO,
