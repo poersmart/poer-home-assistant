@@ -71,7 +71,7 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_target_temperature_step = DEFAULT_TEMP_STEP
     _attr_precision = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [
         HVACMode.AUTO,
         #  HVACMode.COOL,
@@ -122,13 +122,13 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
 
         # 基本属性
         self._attr_name = data.get("name", DEFAULT_NAME)
-        self._attr_current_temperature = data.get("current_temp")
+        self._attr_native_current_temperature = data.get("current_temp")
         self._attr_current_humidity = data.get("current_humidity")
-        self._attr_target_temperature = data.get("target_temp")
+        self._attr_native_target_temperature = data.get("target_temp")
         self._attr_min_temp = data.get("min_temp")
         self._attr_max_temp = data.get("max_temp")
-        # self._attr_target_temperature_low = data.get("temp_low")
-        # self._attr_target_temperature_high = data.get("temp_high")
+        # self._attr_native_target_temperature_low = data.get("temp_low")
+        # self._attr_native_target_temperature_high = data.get("temp_high")
 
         # 设备信息
         self._attr_model = data.get("model", "Unknown Model")
@@ -200,12 +200,12 @@ class POERThermostat(CoordinatorEntity, ClimateEntity):
         if temp is not None:
             endpoint = "set_temp"
             payload = {"temperature": temp}
-            self._attr_target_temperature = temp  # 乐观更新
+            self._attr_native_target_temperature = temp  # 乐观更新
         # elif target_temp_low is not None and target_temp_high is not None:
         #     endpoint = "set_temp_range"
         #     payload = {"low": target_temp_low, "high": target_temp_high}
-        #     self._attr_target_temperature_low = target_temp_low  # 乐观更新
-        #     self._attr_target_temperature_high = target_temp_high  # 乐观更新
+        #     self._attr_native_target_temperature_low = target_temp_low  # 乐观更新
+        #     self._attr_native_target_temperature_high = target_temp_high  # 乐观更新
 
         if endpoint and payload:
             success = await self.coordinator.send_command(
